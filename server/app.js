@@ -28,6 +28,12 @@ app.use(cookieParser());
 app.get("/docs", (req, res) => {
   res.sendFile(__dirname + "/views/docs.html");
 });
+app.get("/api/cohorts",(req,res,next) => {
+  res.sendFile(__dirname + '/cohorts.json')
+})
+app.get("/api/students",(req,res,next) => {
+  res.sendFile(__dirname + '/students.json')
+})
 
 
 // START SERVER
