@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const { Schema, model } = mongoose;
+const AutoIncrement = require('mongoose-sequence')(mongoose)
 
 const studentSchema = new Schema(
   {
@@ -49,5 +50,7 @@ const studentSchema = new Schema(
     timestamps: true,
   }
 );
+
+studentSchema.plugin(AutoIncrement, { inc_field: '_id' })
 
 module.exports = model("Student", studentSchema);

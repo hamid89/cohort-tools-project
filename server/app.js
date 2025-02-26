@@ -2,10 +2,12 @@ const express = require("express");
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
 const { MongoClient } = require("mongodb");
+const student = require("./models/studentSchema")
+const Cohort = require("./models/chortSchema")
 const mongoURI = "mongodb://localhost:27017";
 const PORT = 5005;
 
-const mongoURI = "mongodb://localhost:27017";
+
 // STATIC DATA
 // Devs Team - Import the provided files with JSON data of students and cohorts here:
 // ...
