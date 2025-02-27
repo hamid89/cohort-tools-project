@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 const { Schema, model } = mongoose;
-const AutoIncrement = require('mongoose-sequence')(mongoose)
 
 const studentSchema = new Schema(
   {
@@ -29,7 +28,6 @@ const studentSchema = new Schema(
     },
     program: {
       type: String,
-      required: true,
     },
     background: {
       type: String,
@@ -39,10 +37,9 @@ const studentSchema = new Schema(
     },
     cohort: {
       type: Number,
-      required: true,
     },
     projects: {
-      type: [Schema.Types.Mixed],
+      type: [String],
       default: [],
     },
   },
@@ -50,7 +47,5 @@ const studentSchema = new Schema(
     timestamps: true,
   }
 );
-
-studentSchema.plugin(AutoIncrement, { inc_field: '_id' })
 
 module.exports = model("Student", studentSchema);
