@@ -23,7 +23,7 @@ const mongoose = require("mongoose");
 //   .catch((err) => console.error("MongoDB connection error: ", err));
 
 mongoose
-  .connect("mongodb://localhost:27017/rest-api-project")
+  .connect("mongodb://localhost:27017/cohort-tools-api")
   .then((response) => {
     const databaseName = response.connections[0]?.name;
     console.log("Mongoose connected to the", databaseName);
@@ -76,14 +76,58 @@ app.get("/api/students", (req, res, next) => {
 
 app.post("/api/students", async (req, res) => {
   try {
-    const createdUser = await Student.create(req.body);
+    const createdStudent = await Student.create(req.body);
     console.log("req.body while user creation:", req.body);
-    if (createdUser) return res.status(201).json(createdUser);
+    if (createdStudent) return res.status(201).json(createdStudent);
   } catch (error) {
-    console.log("error during user creation:", error);
+    console.log("error during student creation:", error);
     res.status(500).json({ error: error.message });
   }
 });
+app.post("/api/cohorts", async (req, res) => {
+  try {
+    const createdCohort = await Cohort.create(req.body);
+    console.log("req.body while cohort creation:", req.body);
+    if (createdCohort) return res.status(201).json(createdCohort);
+  } catch (error) {
+    console.log("error during cohort creation:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+app.get("/api/students/:id", (req, res, next) => {
+  // Convert the id to a MongoDB ObjectId type
+  const id = new mongoose.Types.ObjectId(req.params.id); 
+
+  // Find the student by their _id
+  Student.findOne({ _id: id })
+    .then((student) => {
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+      res.json(student);
+    })
+    .catch((err) => {
+      next(err);
+    });
+});
+
+app.get("/api/cohorts/:id", (req, res, next) => {
+  // Convert the id to a MongoDB ObjectId type
+  const id = new mongoose.Types.ObjectId(req.params.id); 
+
+  // Find the student by their _id
+  Cohort.findOne({ _id: id })
+    .then((cohort) => {
+      if (!cohort) {
+        return res.status(404).json({ message: "cohort not found" });
+      }
+      res.json(cohort);
+    })
+    .catch((err) => {
+      next(err);
+    });
+});
+
 
 // START SERVER
 app.listen(PORT, () => {

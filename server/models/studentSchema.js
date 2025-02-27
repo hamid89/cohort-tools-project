@@ -14,7 +14,7 @@ const studentSchema = new Schema(
     email: {
       type: String,
       required: true,
-      unique: true,
+      unique: true
     },
     phone: {
       type: String,
@@ -39,7 +39,7 @@ const studentSchema = new Schema(
       type: Number,
     },
     projects: {
-      type: [String],
+      type: [Schema.Types.Mixed],
       default: [],
     },
   },

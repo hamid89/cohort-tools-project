@@ -4,11 +4,11 @@ const { Schema, model } = mongoose;
 
 const cohortsSchema = new Schema(
   {
-    _id: Number,
+    
     cohortSlug: {
       type: String,
       required: true,
-      unique: true,
+      // unique: true,
     },
     cohortName: {
       type: String,
@@ -55,6 +55,6 @@ const cohortsSchema = new Schema(
     timestamps: true,
   }
 );
-// cohortsSchema.plugin(AutoIncrement, { inc_field: "_id" });
+ // cohortsSchema.plugin(AutoIncrement, { inc_field: "_id" });
 
 module.exports = model("Cohort", cohortsSchema);
