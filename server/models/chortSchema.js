@@ -8,7 +8,7 @@ const cohortsSchema = new Schema(
     cohortSlug: {
       type: String,
       required: true,
-      // unique: true,
+      unique: true,
     },
     cohortName: {
       type: String,

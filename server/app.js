@@ -6,22 +6,6 @@ const Cohort = require("./models/chortSchema");
 const PORT = 5005;
 const mongoose = require("mongoose");
 
-// STATIC DATA
-// Devs Team - Import the provided files with JSON data of students and cohorts here:
-// ...
-
-// comment
-// let db;
-// MongoClient.connect(mongoURI, {
-//   useNewUrlParser: true,
-//   useUnifiedTopology: true,
-// })
-//   .then((client) => {
-//     console.log("MongoDB Connected");
-//     db = client.db("rest-api-project"); // Specify your database name
-//   })
-//   .catch((err) => console.error("MongoDB connection error: ", err));
-
 mongoose
   .connect("mongodb://localhost:27017/cohort-tools-api")
   .then((response) => {
@@ -73,7 +57,7 @@ app.get("/api/students", (req, res, next) => {
 // app.use((req, res) => {
 //   res.status(500).send("Something went wrong!");
 // });
-
+// creating new student record 
 app.post("/api/students", async (req, res) => {
   try {
     const createdStudent = await Student.create(req.body);
@@ -84,6 +68,7 @@ app.post("/api/students", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+// creating new cohort
 app.post("/api/cohorts", async (req, res) => {
   try {
     const createdCohort = await Cohort.create(req.body);
@@ -94,6 +79,7 @@ app.post("/api/cohorts", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+// reading student record
 app.get("/api/students/:id", (req, res, next) => {
   // Convert the id to a MongoDB ObjectId type
   const id = new mongoose.Types.ObjectId(req.params.id); 
@@ -110,13 +96,81 @@ app.get("/api/students/:id", (req, res, next) => {
       next(err);
     });
 });
+// student record update
+app.put("/api/students/:id", (req, res, next) => {
+  // Convert the id to a MongoDB ObjectId type
+  const id = new mongoose.Types.ObjectId(req.params.id); 
 
+  // Find the student by their _id
+  Student.findByIdAndUpdate(id, req.body, { new: true })
+    .then((student) => {
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+      res.json(student);
+    })
+    .catch((err) => {
+      next(err);
+    });
+});
+// student deletion
+app.delete("/api/students/:id", (req, res, next) => {
+  // Convert the id to a MongoDB ObjectId type
+  const id =  new mongoose.Types.ObjectId(req.params.id); 
+
+  // Find the student by their _id
+  Student.findByIdAndDelete(id)
+    .then((student) => {
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+      res.json(student);
+    })
+    .catch((err) => {
+      next(err);
+    });
+});
+// cohort record reading by id
 app.get("/api/cohorts/:id", (req, res, next) => {
   // Convert the id to a MongoDB ObjectId type
   const id = new mongoose.Types.ObjectId(req.params.id); 
 
   // Find the student by their _id
   Cohort.findOne({ _id: id })
+    .then((cohort) => {
+      if (!cohort) {
+        return res.status(404).json({ message: "cohort not found" });
+      }
+      res.json(cohort);
+    })
+    .catch((err) => {
+      next(err);
+    });
+});
+// cohort update
+app.put("/api/cohorts/:id", (req, res, next) => {
+  // Convert the id to a MongoDB ObjectId type
+  const id =  new mongoose.Types.ObjectId(req.params.id); 
+
+  // Find the student by their _id
+  Cohort.findByIdAndUpdate(id, req.body, { new: true })
+    .then((cohort) => {
+      if (!cohort) {
+        return res.status(404).json({ message: "cohort not found" });
+      }
+      res.json(cohort);
+    })
+    .catch((err) => {
+      next(err);
+    });
+});
+// cohort delete
+app.delete("/api/cohorts/:id", (req, res, next) => {
+  // Convert the id to a MongoDB ObjectId type
+  const id =  new mongoose.Types.ObjectId(req.params.id); 
+
+  // Find the student by their _id
+  Cohort.findByIdAndDelete(id)
     .then((cohort) => {
       if (!cohort) {
         return res.status(404).json({ message: "cohort not found" });
