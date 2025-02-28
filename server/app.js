@@ -3,12 +3,17 @@ const cors = require("cors");
 const express = require("express");
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
+const bcrypt = require("bcrypt");
 const Student = require("./models/studentSchema");
 const Cohort = require("./models/chortSchema");
+const User = require("./models/userSchema");
 const mongoose = require("mongoose");
+const jwt = require("jsonwebtoken");
+const { isAuthenticated } = require("./middleware/jwt.middleware");
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5005;
 const MONGODB_URL = process.env.MONGODB_URL;
+const saltRounds = 10;
 
 mongoose
   .connect(MONGODB_URL)
@@ -63,7 +68,7 @@ app.get("/api/students", (req, res, next) => {
 //   res.status(500).send("Something went wrong!");
 // });
 // creating new student record
-app.post("/api/students", async (req, res) => {
+app.post("/api/students", isAuthenticated, async (req, res) => {
   try {
     const createdStudent = await Student.create(req.body);
     console.log("req.body while user creation:", req.body);
@@ -74,7 +79,7 @@ app.post("/api/students", async (req, res) => {
   }
 });
 // creating new cohort
-app.post("/api/cohorts", async (req, res) => {
+app.post("/api/cohorts", isAuthenticated, async (req, res) => {
   try {
     const createdCohort = await Cohort.create(req.body);
     console.log("req.body while cohort creation:", req.body);
@@ -85,7 +90,7 @@ app.post("/api/cohorts", async (req, res) => {
   }
 });
 // reading student record
-app.get("/api/students/:id", (req, res, next) => {
+app.get("/api/students/:id", isAuthenticated, (req, res, next) => {
   // Convert the id to a MongoDB ObjectId type
   const { id } = req.params;
 
@@ -102,7 +107,7 @@ app.get("/api/students/:id", (req, res, next) => {
     });
 });
 // student record update
-app.put("/api/students/:id", (req, res, next) => {
+app.put("/api/students/:id", isAuthenticated, (req, res, next) => {
   // Convert the id to a MongoDB ObjectId type
   const id = new mongoose.Types.ObjectId(req.params.id);
 
@@ -119,7 +124,7 @@ app.put("/api/students/:id", (req, res, next) => {
     });
 });
 // student deletion
-app.delete("/api/students/:id", (req, res, next) => {
+app.delete("/api/students/:id", isAuthenticated, (req, res, next) => {
   // Convert the id to a MongoDB ObjectId type
   const id = new mongoose.Types.ObjectId(req.params.id);
 
@@ -136,7 +141,7 @@ app.delete("/api/students/:id", (req, res, next) => {
     });
 });
 // cohort record reading by id
-app.get("/api/cohorts/:id", (req, res, next) => {
+app.get("/api/cohorts/:id", isAuthenticated, (req, res, next) => {
   // Convert the id to a MongoDB ObjectId type
   const id = new mongoose.Types.ObjectId(req.params.id);
 
@@ -153,7 +158,7 @@ app.get("/api/cohorts/:id", (req, res, next) => {
     });
 });
 // cohort update
-app.put("/api/cohorts/:id", (req, res, next) => {
+app.put("/api/cohorts/:id", isAuthenticated, (req, res, next) => {
   // Convert the id to a MongoDB ObjectId type
   const id = new mongoose.Types.ObjectId(req.params.id);
 
@@ -170,7 +175,7 @@ app.put("/api/cohorts/:id", (req, res, next) => {
     });
 });
 // cohort delete
-app.delete("/api/cohorts/:id", (req, res, next) => {
+app.delete("/api/cohorts/:id", isAuthenticated, (req, res, next) => {
   // Convert the id to a MongoDB ObjectId type
   const id = new mongoose.Types.ObjectId(req.params.id);
 
@@ -184,6 +189,87 @@ app.delete("/api/cohorts/:id", (req, res, next) => {
     })
     .catch((err) => {
       next(err);
+    });
+});
+
+app.post("/auth/signup", isAuthenticated, (req, res, next) => {
+  // receive the data from the request body
+  const { email, password, name } = req.body;
+
+  //data validation
+  if (!email || !password || !name) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  // Use regex to validate the email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  if (!emailRegex.test(email)) {
+    res.status(400).json({ message: "Provide a valid email address." });
+    return;
+  }
+
+  // Use regex to validate the password format
+  const passwordRegex = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,}/;
+  if (!passwordRegex.test(password)) {
+    res.status(400).json({
+      message:
+        "Password must have at least 6 characters and contain at least one number, one lowercase and one uppercase letter.",
+    });
+    return;
+  }
+
+  // hash the password
+  const salt = bcrypt.genSaltSync(saltRounds);
+  const hashedPassword = bcrypt.hashSync(password, salt);
+
+  //create a new user
+  User.create({ name, email, password: hashedPassword })
+    .then((user) => {
+      res.status(201).json(user);
+    })
+    .catch((err) => {
+      res.status(500).json({ message: err.message });
+    });
+});
+
+app.post("/auth/login", isAuthenticated, (req, res, next) => {
+  // receive the data from the request body
+  const { email, password } = req.body;
+
+  //data validation
+  if (!email || !password) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  User.findOne({ email })
+    .then((user) => {
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const correctPassword = bcrypt.compareSync(password, user.password);
+
+      //compare the password
+      if (correctPassword) {
+        // Create the payload
+        const payload = {
+          userId: user._id,
+          email: user.email,
+        };
+
+        // Create and sign the token
+        const authToken = jwt.sign(payload, process.env.TOKEN_SECRET, {
+          algorithm: "HS256",
+          expiresIn: "6h",
+        });
+
+        res.status(200).json({ message: "Login successful", user, authToken });
+      } else {
+        res.status(401).json({ message: "Invalid credentials" });
+      }
+    })
+    .catch((err) => {
+      res.status(500).json({ message: err.message });
     });
 });
 
