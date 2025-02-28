@@ -1,65 +1,190 @@
+require("dotenv").config();
+const cors = require("cors");
 const express = require("express");
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
-const { MongoClient } = require('mongodb');
-const mongoURI = "mongodb://localhost:27017"
-const PORT = 5005;
-const { MongoClient } = require('mongodb')
+const Student = require("./models/studentSchema");
+const Cohort = require("./models/chortSchema");
+const mongoose = require("mongoose");
 
-// STATIC DATA
-// Devs Team - Import the provided files with JSON data of students and cohorts here:
-// ...
-let db;
-MongoClient.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then((client) => {
-    console.log("MongoDB Connected");
-    db = client.db('cohort-tools-api'); // Specify your database name
+const PORT = process.env.PORT || 5000;
+const MONGODB_URL = process.env.MONGODB_URL;
+
+mongoose
+  .connect(MONGODB_URL)
+  .then((response) => {
+    const databaseName = response.connections[0]?.name;
+    console.log("Mongoose connected to the", databaseName);
   })
-  .catch((err) => console.error("MongoDB connection error: ", err));
+  .catch((err) => {
+    console.log("Error occured while connecting to the database:", err);
+  });
 
 // INITIALIZE EXPRESS APP - https://expressjs.com/en/4x/api.html#express
 const app = express();
 
-
 // MIDDLEWARE
 // Research Team - Set up CORS middleware here:
 // ...
-app.use(express.json());
+app.use(cors());
 app.use(morgan("dev"));
 app.use(express.static("public"));
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-
+app.use(express.json());
 
 // ROUTES - https://expressjs.com/en/starter/basic-routing.html
 // Devs Team - Start working on the routes here:
 // ...
-app.get("/docs", (req, res,next) => {
+app.get("/docs", (req, res, next) => {
   res.sendFile(__dirname + "/views/docs.html");
 });
-app.get("/api/cohorts",(req,res,next) => {
-  const collection = db.collection('cohorts'); // Specify your collection name
-  collection.find().toArray()
-  .then((cohorts) => {
-  res.json(cohorts); // Return the whole collection as a JSON response
+app.get("/api/cohorts", (req, res, next) => {
+  Cohort.find()
+    .then((cohorts) => {
+      console.log("cohorts received with mongoose syntax!");
+      res.json(cohorts); // Return the whole collection as a JSON response
     })
     .catch((err) => {
       next(err); // Pass any errors to the error handler
     });
-})
-app.get("/api/students",(req,res,next) => {
-  const collection = db.collection('students'); // Specify your collection name
-  collection.find().toArray()
-  .then((students) => {
-  res.json(students); // Return the whole collection as a JSON response
+});
+app.get("/api/students", (req, res, next) => {
+  Student.find()
+    .then((students) => {
+      console.log("students received with mongoose syntax!");
+      res.json(students); // Return the whole collection as a JSON response
     })
     .catch((err) => {
       next(err); // Pass any errors to the error handler
     });
-})
-app.use((err, req, res, next) => {
-  console.error(err);
-  res.status(500).send('Something went wrong!');
+});
+// app.use((req, res) => {
+//   res.status(500).send("Something went wrong!");
+// });
+// creating new student record
+app.post("/api/students", async (req, res) => {
+  try {
+    const createdStudent = await Student.create(req.body);
+    console.log("req.body while user creation:", req.body);
+    if (createdStudent) return res.status(201).json(createdStudent);
+  } catch (error) {
+    console.log("error during student creation:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+// creating new cohort
+app.post("/api/cohorts", async (req, res) => {
+  try {
+    const createdCohort = await Cohort.create(req.body);
+    console.log("req.body while cohort creation:", req.body);
+    if (createdCohort) return res.status(201).json(createdCohort);
+  } catch (error) {
+    console.log("error during cohort creation:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+// reading student record
+app.get("/api/students/:id", (req, res, next) => {
+  // Convert the id to a MongoDB ObjectId type
+  const { id } = req.params;
+
+  // Find the student by their _id
+  Student.findOne({ _id: id })
+    .then((student) => {
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+      res.json(student);
+    })
+    .catch((err) => {
+      next(err);
+    });
+});
+// student record update
+app.put("/api/students/:id", (req, res, next) => {
+  // Convert the id to a MongoDB ObjectId type
+  const id = new mongoose.Types.ObjectId(req.params.id);
+
+  // Find the student by their _id
+  Student.findByIdAndUpdate(id, req.body, { new: true })
+    .then((student) => {
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+      res.json(student);
+    })
+    .catch((err) => {
+      next(err);
+    });
+});
+// student deletion
+app.delete("/api/students/:id", (req, res, next) => {
+  // Convert the id to a MongoDB ObjectId type
+  const id = new mongoose.Types.ObjectId(req.params.id);
+
+  // Find the student by their _id
+  Student.findByIdAndDelete(id)
+    .then((student) => {
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+      res.json(student);
+    })
+    .catch((err) => {
+      next(err);
+    });
+});
+// cohort record reading by id
+app.get("/api/cohorts/:id", (req, res, next) => {
+  // Convert the id to a MongoDB ObjectId type
+  const id = new mongoose.Types.ObjectId(req.params.id);
+
+  // Find the student by their _id
+  Cohort.findOne({ _id: id })
+    .then((cohort) => {
+      if (!cohort) {
+        return res.status(404).json({ message: "cohort not found" });
+      }
+      res.json(cohort);
+    })
+    .catch((err) => {
+      next(err);
+    });
+});
+// cohort update
+app.put("/api/cohorts/:id", (req, res, next) => {
+  // Convert the id to a MongoDB ObjectId type
+  const id = new mongoose.Types.ObjectId(req.params.id);
+
+  // Find the student by their _id
+  Cohort.findByIdAndUpdate(id, req.body, { new: true })
+    .then((cohort) => {
+      if (!cohort) {
+        return res.status(404).json({ message: "cohort not found" });
+      }
+      res.json(cohort);
+    })
+    .catch((err) => {
+      next(err);
+    });
+});
+// cohort delete
+app.delete("/api/cohorts/:id", (req, res, next) => {
+  // Convert the id to a MongoDB ObjectId type
+  const id = new mongoose.Types.ObjectId(req.params.id);
+
+  // Find and delete the cohort by its UUID _id
+  Cohort.findByIdAndDelete(id)
+    .then((cohort) => {
+      if (!cohort) {
+        return res.status(404).json({ message: "Cohort not found" });
+      }
+      res.json(cohort);
+    })
+    .catch((err) => {
+      next(err);
+    });
 });
 
 // START SERVER
