@@ -82,7 +82,7 @@ app.post("/api/cohorts", async (req, res) => {
 // reading student record
 app.get("/api/students/:id", (req, res, next) => {
   // Convert the id to a MongoDB ObjectId type
-  const id = new mongoose.Types.ObjectId(req.params.id); 
+  const { id } = req.params 
 
   // Find the student by their _id
   Student.findOne({ _id: id })
@@ -99,7 +99,7 @@ app.get("/api/students/:id", (req, res, next) => {
 // student record update
 app.put("/api/students/:id", (req, res, next) => {
   // Convert the id to a MongoDB ObjectId type
-  const id = new mongoose.Types.ObjectId(req.params.id); 
+  const { id } = req.params  
 
   // Find the student by their _id
   Student.findByIdAndUpdate(id, req.body, { new: true })
@@ -116,7 +116,7 @@ app.put("/api/students/:id", (req, res, next) => {
 // student deletion
 app.delete("/api/students/:id", (req, res, next) => {
   // Convert the id to a MongoDB ObjectId type
-  const id =  new mongoose.Types.ObjectId(req.params.id); 
+  const { id } = req.params 
 
   // Find the student by their _id
   Student.findByIdAndDelete(id)
@@ -133,7 +133,7 @@ app.delete("/api/students/:id", (req, res, next) => {
 // cohort record reading by id
 app.get("/api/cohorts/:id", (req, res, next) => {
   // Convert the id to a MongoDB ObjectId type
-  const id = new mongoose.Types.ObjectId(req.params.id); 
+  const { id } = req.params 
 
   // Find the student by their _id
   Cohort.findOne({ _id: id })
@@ -150,7 +150,7 @@ app.get("/api/cohorts/:id", (req, res, next) => {
 // cohort update
 app.put("/api/cohorts/:id", (req, res, next) => {
   // Convert the id to a MongoDB ObjectId type
-  const id =  new mongoose.Types.ObjectId(req.params.id); 
+  const { id } =  req.params 
 
   // Find the student by their _id
   Cohort.findByIdAndUpdate(id, req.body, { new: true })
@@ -166,14 +166,13 @@ app.put("/api/cohorts/:id", (req, res, next) => {
 });
 // cohort delete
 app.delete("/api/cohorts/:id", (req, res, next) => {
-  // Convert the id to a MongoDB ObjectId type
-  const id =  new mongoose.Types.ObjectId(req.params.id); 
+  const { id } = req.params; // Directly use the UUID string from the request parameters
 
-  // Find the student by their _id
+  // Find and delete the cohort by its UUID _id
   Cohort.findByIdAndDelete(id)
     .then((cohort) => {
       if (!cohort) {
-        return res.status(404).json({ message: "cohort not found" });
+        return res.status(404).json({ message: "Cohort not found" });
       }
       res.json(cohort);
     })
@@ -181,6 +180,7 @@ app.delete("/api/cohorts/:id", (req, res, next) => {
       next(err);
     });
 });
+
 
 
 // START SERVER
