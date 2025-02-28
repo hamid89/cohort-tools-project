@@ -1,13 +1,17 @@
+require("dotenv").config();
+const cors = require("cors");
 const express = require("express");
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
 const Student = require("./models/studentSchema");
 const Cohort = require("./models/chortSchema");
-const PORT = 5005;
 const mongoose = require("mongoose");
 
+const PORT = process.env.PORT || 5000;
+const MONGODB_URL = process.env.MONGODB_URL;
+
 mongoose
-  .connect("mongodb://localhost:27017/cohort-tools-api")
+  .connect(MONGODB_URL)
   .then((response) => {
     const databaseName = response.connections[0]?.name;
     console.log("Mongoose connected to the", databaseName);
@@ -22,6 +26,7 @@ const app = express();
 // MIDDLEWARE
 // Research Team - Set up CORS middleware here:
 // ...
+app.use(cors());
 app.use(morgan("dev"));
 app.use(express.static("public"));
 app.use(express.urlencoded({ extended: false }));
@@ -57,7 +62,7 @@ app.get("/api/students", (req, res, next) => {
 // app.use((req, res) => {
 //   res.status(500).send("Something went wrong!");
 // });
-// creating new student record 
+// creating new student record
 app.post("/api/students", async (req, res) => {
   try {
     const createdStudent = await Student.create(req.body);
@@ -82,7 +87,7 @@ app.post("/api/cohorts", async (req, res) => {
 // reading student record
 app.get("/api/students/:id", (req, res, next) => {
   // Convert the id to a MongoDB ObjectId type
-  const id = new mongoose.Types.ObjectId(req.params.id); 
+  const id = new mongoose.Types.ObjectId(req.params.id);
 
   // Find the student by their _id
   Student.findOne({ _id: id })
@@ -99,7 +104,7 @@ app.get("/api/students/:id", (req, res, next) => {
 // student record update
 app.put("/api/students/:id", (req, res, next) => {
   // Convert the id to a MongoDB ObjectId type
-  const id = new mongoose.Types.ObjectId(req.params.id); 
+  const id = new mongoose.Types.ObjectId(req.params.id);
 
   // Find the student by their _id
   Student.findByIdAndUpdate(id, req.body, { new: true })
@@ -116,7 +121,7 @@ app.put("/api/students/:id", (req, res, next) => {
 // student deletion
 app.delete("/api/students/:id", (req, res, next) => {
   // Convert the id to a MongoDB ObjectId type
-  const id =  new mongoose.Types.ObjectId(req.params.id); 
+  const id = new mongoose.Types.ObjectId(req.params.id);
 
   // Find the student by their _id
   Student.findByIdAndDelete(id)
@@ -133,7 +138,7 @@ app.delete("/api/students/:id", (req, res, next) => {
 // cohort record reading by id
 app.get("/api/cohorts/:id", (req, res, next) => {
   // Convert the id to a MongoDB ObjectId type
-  const id = new mongoose.Types.ObjectId(req.params.id); 
+  const id = new mongoose.Types.ObjectId(req.params.id);
 
   // Find the student by their _id
   Cohort.findOne({ _id: id })
@@ -150,7 +155,7 @@ app.get("/api/cohorts/:id", (req, res, next) => {
 // cohort update
 app.put("/api/cohorts/:id", (req, res, next) => {
   // Convert the id to a MongoDB ObjectId type
-  const id =  new mongoose.Types.ObjectId(req.params.id); 
+  const id = new mongoose.Types.ObjectId(req.params.id);
 
   // Find the student by their _id
   Cohort.findByIdAndUpdate(id, req.body, { new: true })
@@ -167,7 +172,7 @@ app.put("/api/cohorts/:id", (req, res, next) => {
 // cohort delete
 app.delete("/api/cohorts/:id", (req, res, next) => {
   // Convert the id to a MongoDB ObjectId type
-  const id =  new mongoose.Types.ObjectId(req.params.id); 
+  const id = new mongoose.Types.ObjectId(req.params.id);
 
   // Find the student by their _id
   Cohort.findByIdAndDelete(id)
@@ -181,7 +186,6 @@ app.delete("/api/cohorts/:id", (req, res, next) => {
       next(err);
     });
 });
-
 
 // START SERVER
 app.listen(PORT, () => {
