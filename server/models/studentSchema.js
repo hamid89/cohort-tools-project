@@ -43,9 +43,7 @@ const studentSchema = new Schema(
       default: [],
     },
   },
-  {
-    timestamps: true,
-  }
+ 
 );
 
 module.exports = model("Student", studentSchema);
