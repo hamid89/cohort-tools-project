@@ -91,25 +91,34 @@ app.post("/api/cohorts", isAuthenticated, async (req, res) => {
 });
 // reading student record
 app.get("/api/students/:id", isAuthenticated, (req, res, next) => {
-  // Convert the id to a MongoDB ObjectId type
-  const { id } = req.params;
+  try {
+    // const userId = new mongoose.Types.ObjectId(req.params.id);
+    const userId = req.params.id;
 
-  // Find the student by their _id
-  Student.findOne({ _id: id })
-    .then((student) => {
-      if (!student) {
-        return res.status(404).json({ message: "Student not found" });
-      }
-      res.json(student);
-    })
-    .catch((err) => {
-      next(err);
-    });
+    console.log("id:", userId);
+
+    Student.findOne({ _id: userId })
+      .then((student) => {
+        if (!student) {
+          console.error("Invalid studentId:", studentId);
+          return res.status(404).json({ message: "Student not found" });
+        }
+        console.log("student found:", student);
+        res.json(student);
+      })
+      .catch((err) => {
+        next(err);
+      });
+  } catch (error) {
+    res.status(400).json({ message: "Invalid ID format" });
+  }
 });
+
 // student record update
 app.put("/api/students/:id", isAuthenticated, (req, res, next) => {
   // Convert the id to a MongoDB ObjectId type
-  const id = new mongoose.Types.ObjectId(req.params.id);
+  // const id = new mongoose.Types.ObjectId(req.params.id);
+  const id = req.params.id;
 
   // Find the student by their _id
   Student.findByIdAndUpdate(id, req.body, { new: true })
@@ -126,7 +135,9 @@ app.put("/api/students/:id", isAuthenticated, (req, res, next) => {
 // student deletion
 app.delete("/api/students/:id", isAuthenticated, (req, res, next) => {
   // Convert the id to a MongoDB ObjectId type
-  const id = new mongoose.Types.ObjectId(req.params.id);
+  // const id = new mongoose.Types.ObjectId(req.params.id);
+
+  const id = req.params.id;
 
   // Find the student by their _id
   Student.findByIdAndDelete(id)
@@ -143,14 +154,16 @@ app.delete("/api/students/:id", isAuthenticated, (req, res, next) => {
 // cohort record reading by id
 app.get("/api/cohorts/:id", isAuthenticated, (req, res, next) => {
   // Convert the id to a MongoDB ObjectId type
-  const id = new mongoose.Types.ObjectId(req.params.id);
+  // const id = new mongoose.Types.ObjectId(req.params.id);
 
+  const id = req.params.id;
   // Find the student by their _id
   Cohort.findOne({ _id: id })
     .then((cohort) => {
       if (!cohort) {
         return res.status(404).json({ message: "cohort not found" });
       }
+      console.log(cohort);
       res.json(cohort);
     })
     .catch((err) => {
@@ -160,7 +173,9 @@ app.get("/api/cohorts/:id", isAuthenticated, (req, res, next) => {
 // cohort update
 app.put("/api/cohorts/:id", isAuthenticated, (req, res, next) => {
   // Convert the id to a MongoDB ObjectId type
-  const id = new mongoose.Types.ObjectId(req.params.id);
+  // const id = new mongoose.Types.ObjectId(req.params.id);
+
+  const id = req.params.id;
 
   // Find the student by their _id
   Cohort.findByIdAndUpdate(id, req.body, { new: true })
@@ -177,7 +192,9 @@ app.put("/api/cohorts/:id", isAuthenticated, (req, res, next) => {
 // cohort delete
 app.delete("/api/cohorts/:id", isAuthenticated, (req, res, next) => {
   // Convert the id to a MongoDB ObjectId type
-  const id = new mongoose.Types.ObjectId(req.params.id);
+  // const id = new mongoose.Types.ObjectId(req.params.id);
+
+  const id = req.params.id;
 
   // Find and delete the cohort by its UUID _id
   Cohort.findByIdAndDelete(id)
@@ -232,7 +249,7 @@ app.post("/auth/signup", isAuthenticated, (req, res, next) => {
     });
 });
 
-app.post("/auth/login", isAuthenticated, (req, res, next) => {
+app.post("/auth/login", (req, res, next) => {
   // receive the data from the request body
   const { email, password } = req.body;
 
@@ -271,6 +288,35 @@ app.post("/auth/login", isAuthenticated, (req, res, next) => {
     .catch((err) => {
       res.status(500).json({ message: err.message });
     });
+});
+
+app.get("/api/students/cohort/:cohortId", isAuthenticated, (req, res, next) => {
+  const cohortId = req.params.cohortId;
+
+  Student.find({ cohort: cohortId })
+    .then((students) => {
+      res.json(students);
+    })
+    .catch((err) => {
+      next(err);
+    });
+});
+
+app.get("/api/users/:id", isAuthenticated, (req, res, next) => {
+  const userId = req.params.id;
+  console.log("userId in /api/users/:id", userId);
+  User.findOne({ _id: userId })
+    .then((user) => {
+      res.json(user);
+    })
+    .catch((err) => {
+      next(err);
+    });
+});
+
+app.get("/auth/verify", isAuthenticated, (req, res, next) => {
+  console.log("req.user", req.payload);
+  res.status(200).json(req.payload);
 });
 
 // START SERVER

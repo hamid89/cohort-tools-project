@@ -17,8 +17,11 @@ function CohortDetailsPage() {
   const { cohortId } = useParams();
 
   const getCohort = useCallback(() => {
+    const authToken = localStorage.getItem("authToken");
     axios
-      .get(`${API_URL}/api/cohorts/${cohortId}`)
+      .get(`${API_URL}/api/cohorts/${cohortId}`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      })
       .then((response) => {
         const oneCohort = response.data;
         setCohort(oneCohort);
@@ -27,8 +30,12 @@ function CohortDetailsPage() {
   }, [cohortId]);
 
   const getStudents = useCallback(() => {
+    axios;
+    const authToken = localStorage.getItem("authToken");
     axios
-      .get(`${API_URL}/api/students/cohort/${cohortId}`)
+      .get(`${API_URL}/api/students/cohort/${cohortId}`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      })
       .then((response) => {
         const allStudents = response.data;
         setStudents(allStudents);
@@ -46,9 +53,9 @@ function CohortDetailsPage() {
     <div className={`CohortDetails bg-gray-100 py-6 px-4`}>
       {/* Drawer */}
       <div
-className={`drawer transition-transform transform ${
-       showDrawer ? "translate-x-0" : "translate-x-full"
-     } fixed right-0 top-0 h-full bg-white shadow-md z-10`}
+        className={`drawer transition-transform transform ${
+          showDrawer ? "translate-x-0" : "translate-x-full"
+        } fixed right-0 top-0 h-full bg-white shadow-md z-10`}
       >
         {cohort && showDrawer && (
           <StudentCreateForm
@@ -62,7 +69,6 @@ className={`drawer transition-transform transform ${
           />
         )}
       </div>
-
 
       <div
         className={`CohortDetails bg-gray-100 py-6 px-4 ${

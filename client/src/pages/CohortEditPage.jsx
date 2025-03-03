@@ -33,6 +33,32 @@ function CohortEditPage() {
 
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const getCohort = () => {
+      const token = localStorage.getItem("authToken");
+
+      axios
+        .get(`${API_URL}/api/cohorts/${cohortId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+          },
+        })
+        .then((response) => {
+          console.log("response get student detail:", response);
+          const oneCohort = response.data;
+          setCohort(oneCohort);
+          console.log("oneCohort", oneCohort);
+          setLoading(false);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    };
+
+    getCohort();
+  }, [cohortId]);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
@@ -55,7 +81,12 @@ function CohortEditPage() {
     };
 
     axios
-      .put(`${API_URL}/api/cohorts/${cohortId}`, requestBody)
+      .put(`${API_URL}/api/cohorts/${cohortId}`, requestBody, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          Accept: "application/json",
+        },
+      })
       .then(() => navigate(`/cohorts/details/${cohortId}`))
       .catch((error) => console.log(error));
   };
@@ -302,9 +333,11 @@ function CohortEditPage() {
         <br />
 
         <button
-         type="submit"
-         className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded mt-4 transition duration-150 ease-in-out"
-         >Save</button>
+          type="submit"
+          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded mt-4 transition duration-150 ease-in-out"
+        >
+          Save
+        </button>
 
         <button
           disabled={loading}
